@@ -78,12 +78,12 @@
   .field-wrap{flex:1;}
   .field-wrap label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px;}
   
-  /* PREVENCIÓN DE ZOOM: Forzado a 16px en dispositivos móviles */
+  /* PREVENCIÓN DE ZOOM */
   input, textarea, select {
     background:var(--bg-input);border:1px solid var(--line);border-radius:5px;
     color:var(--text);font-family:'IBM Plex Mono',monospace;
     padding:6px 8px;width:100%;
-    font-size:16px !important; /* Previene el zoom automático en iOS */
+    font-size:16px !important;
   }
   input::placeholder, textarea::placeholder{color:#5a626b;}
   textarea{resize:none;font-family:'Inter',sans-serif;height:36px;}
@@ -334,6 +334,7 @@ function importBackup(file){
       }
       await saveHistory();
       renderHistory();
+      resetDayState();
       renderPanel();
       showBanner('ok', '✓ Copia importada correctamente.');
     }catch(err){
@@ -343,7 +344,11 @@ function importBackup(file){
   reader.readAsText(file);
 }
 
-function daysSince(dateStr){ return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000); }
+function daysBetween(dateStrStart, dateStrEnd){
+  const d1 = new Date(dateStrStart.slice(0,10) + 'T00:00:00');
+  const d2 = new Date(dateStrEnd.slice(0,10) + 'T00:00:00');
+  return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
+}
 
 function loadConfig(){
   try{
@@ -371,27 +376,33 @@ function saveConfig(){
   try{ localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(cfg)); }catch(e){}
 }
 
+/* Búsqueda cronológica basada en sessionDate */
 function lastPrincipalEntry(name){
-  for(let i = history.length - 1; i >= 0; i--){
-    const found = (history[i].principals || []).find(e => e.name === name);
-    if(found) return { date: history[i].date, ...found };
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  for(let i = 0; i < sorted.length; i++){
+    if(sorted[i].date.slice(0,10) <= sessionDate){
+      const found = (sorted[i].principals || []).find(e => e.name === name);
+      if(found) return { date: sorted[i].date, ...found };
+    }
   }
   return null;
 }
 
 function lastCircuitExercise(name){
-  for(let i = history.length - 1; i >= 0; i--){
-    const c = history[i].circuit;
-    if(!c) continue;
-    const found = (c.exercises || []).find(e => e.name === name);
-    if(found) return { date: history[i].date, ...found };
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  for(let i = 0; i < sorted.length; i++){
+    if(sorted[i].date.slice(0,10) <= sessionDate){
+      const c = sorted[i].circuit;
+      if(!c) continue;
+      const found = (c.exercises || []).find(e => e.name === name);
+      if(found) return { date: sorted[i].date, ...found };
+    }
   }
   return null;
 }
 
 function resetDayState(){
   const day = DAYS[activeDay];
-  sessionDate = new Date().toISOString().slice(0,10);
   principalState = {};
   day.principals.forEach(p => {
     const last = lastPrincipalEntry(p);
@@ -446,6 +457,8 @@ async function deleteEntry(entry){
   history.splice(idx, 1);
   await saveHistory();
   renderHistory();
+  resetDayState();
+  renderPanel();
 }
 
 function renderSettingsPanel(){
@@ -579,8 +592,9 @@ function principalRow(name){
   wrap.className = 'ex-row';
 
   const lastReps = last && last.reps ? last.reps.join(',') : null;
+  const daysDiff = last ? daysBetween(last.date, sessionDate) : 0;
   const lastLine = last
-    ? `últ: ${lastReps || '–'} reps @ ${last.weight || '–'}kg · ${daysSince(last.date)}d`
+    ? `últ: ${lastReps || '–'} reps @ ${last.weight || '–'}kg · ${daysDiff}d`
     : 'sin datos';
   const commentLine = last && last.comment ? `<span class="comment">"${last.comment}"</span>` : '';
 
@@ -675,8 +689,9 @@ function circuitExerciseRow(name){
   const last = lastCircuitExercise(name);
   const wrap = document.createElement('div');
   wrap.className = 'ex-row';
+  const daysDiff = last ? daysBetween(last.date, sessionDate) : 0;
   const lastLine = last
-    ? `últ: ${last.weight ? last.weight + 'kg' : 'sin peso'} · ${daysSince(last.date)}d`
+    ? `últ: ${last.weight ? last.weight + 'kg' : 'sin peso'} · ${daysDiff}d`
     : 'sin datos';
   const commentLine = last && last.comment ? `<span class="comment">"${last.comment}"</span>` : '';
   wrap.innerHTML = `
@@ -756,7 +771,11 @@ function renderPanel(){
   dateWrap.innerHTML = `<div class="field-wrap"><input type="date" data-role="sessionDate"></div>`;
   const dateInput = dateWrap.querySelector('[data-role="sessionDate"]');
   dateInput.value = sessionDate;
-  dateInput.onchange = () => { sessionDate = dateInput.value; };
+  dateInput.onchange = () => { 
+    sessionDate = dateInput.value; 
+    resetDayState();
+    renderPanel();
+  };
   panel.appendChild(dateWrap);
 
   const pLabel2 = document.createElement('div');
@@ -801,10 +820,11 @@ function renderPanel(){
       chip.className = 'chip';
       const last = lastCircuitExercise(item);
       let staleTxt = '';
-      if(!last) staleTxt = '<span class="stale">nunca</span>';
-      else {
-        const d = daysSince(last.date);
-        if(d >= 14) staleTxt = `<span class="stale">${d}d</span>`;
+      if(!last) {
+        staleTxt = '<span class="stale">nunca</span>';
+      } else {
+        const d = daysBetween(last.date, sessionDate);
+        staleTxt = `<span class="stale">${d}d</span>`;
       }
       chip.innerHTML = '+ ' + item + staleTxt;
       chip.onclick = () => {
@@ -888,6 +908,7 @@ function weekKey(dateStr){
   monday.setHours(0,0,0,0);
   return monday.toISOString().slice(0,10);
 }
+
 function weekLabel(mondayStr){
   const monday = new Date(mondayStr);
   const sunday = new Date(monday);
@@ -903,7 +924,9 @@ function renderHistory(){
     host.innerHTML = '<div class="empty">Aún no hay sesiones guardadas.</div>';
     return;
   }
-  const sorted = [...history].reverse();
+  
+  /* ORDENACIÓN POR FECHA REAL (Descendente) */
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
   let currentWeek = null;
   sorted.forEach(h => {
     const wk = weekKey(h.date);
@@ -985,6 +1008,7 @@ document.getElementById('resetBtn').onclick = () => {
     await saveHistory();
     host.innerHTML = '';
     renderHistory();
+    resetDayState();
     renderPanel();
   };
   document.getElementById('confirmNo').onclick = () => { host.innerHTML = ''; };
@@ -1002,11 +1026,16 @@ document.getElementById('settingsToggle').onclick = () => {
   renderSettingsPanel();
 };
 
-loadConfig();
-resetDayState();
-renderTabs();
-renderPanel();
-loadHistory();
+/* Secuencia corregida de inicio para evitar datos en blanco */
+async function initApp(){
+  loadConfig();
+  await loadHistory();
+  resetDayState();
+  renderTabs();
+  renderPanel();
+}
+
+initApp();
 </script>
 </body>
 </html>
