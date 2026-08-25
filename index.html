@@ -1,3 +1,15 @@
+¡Entendido! Disculpa la confusión.
+
+He modificado el código HTML que me pasaste para integrar toda la lógica de la que hablamos. Aquí tienes los cambios principales que he implementado en tu aplicación:
+
+1. **Nuevas Categorías (Tiers):** He sustituido los 3 bloques anteriores por las **4 familias de movimiento** que definimos (Core/Estabilidad, Cadena Posterior/Tracción, Empuje/Hombro e Híbridos Metabólicos).
+2. **Sistema de Advertencias Visuales (Conflictos):** He añadido un filtro inteligente. Cuando estés en el **Día A, B o C**, la aplicación detectará automáticamente qué accesorios sobrecargarían los grupos musculares ya trabajados ese día.
+3. **Indicador Visual:** Los ejercicios desaconsejados para ese día aparecerán más tenues, con un borde rojo y un símbolo **⚠**. Aún podrás seleccionarlos si quieres, pero te servirá como guía visual para elegir bien los 4 ejercicios sin pensar demasiado.
+4. **Nueva clave de guardado:** He cambiado la clave de configuración local a `v2` para que la app cargue las nuevas categorías correctamente sin mezclar tus datos anteriores (no te preocupes, el historial de entrenamientos sigue intacto).
+
+Copia y pega este código completo en tu archivo `index (2).html` o en uno nuevo:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -109,15 +121,22 @@
     letter-spacing:.08em;color:var(--text-dim);margin-bottom:5px;display:flex;align-items:center;gap:4px;
   }
   .tier-dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
-  .tier-1 .tier-dot{background:var(--rust);}
-  .tier-2 .tier-dot{background:var(--teal);}
-  .tier-3 .tier-dot{background:var(--text-dim);}
+  .tier-1 .tier-dot{background:var(--teal);}
+  .tier-2 .tier-dot{background:var(--ochre);}
+  .tier-3 .tier-dot{background:var(--rust);}
+  .tier-4 .tier-dot{background:#8b949e;}
+  
   .chips{display:flex;flex-wrap:wrap;gap:5px;}
   .chip{
     background:var(--bg-input);border:1px dashed var(--line);color:var(--text-dim);
     padding:5px 9px;border-radius:12px;font-size:11.5px;cursor:pointer;transition:.12s;
   }
   .chip:hover{border-color:var(--teal);color:var(--text);}
+  
+  /* ESTILOS PARA EJERCICIOS CON CONFLICTO */
+  .chip.warn{opacity:0.6; border-color:var(--rust); color:var(--text-dim);}
+  .chip.warn:hover{opacity:1; color:var(--rust); border-color:var(--rust);}
+  
   .chip .stale{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--ochre);margin-left:3px;}
 
   .save-row{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
@@ -211,41 +230,50 @@
 </div>
 
 <script>
+// ACTUALIZADO: 4 Familias de movimiento
 const ACCESSORY_TIERS = [
-  { label: 'Completos', cls:'tier-1', items: ['Dumbbell Swings', 'Thrusters', 'Dumbbell Snatch alterno', 'Burpees (sin salto)'] },
-  { label: 'Compuestos', cls:'tier-2', items: ['Renegade row', 'Remo a una mano', 'Flexiones', 'Front Lever'] },
-  { label: 'Específicos', cls:'tier-3', items: ['Rueda abdominal', 'Halo mancuerna', 'Equilibrio BOSU', 'Handstand'] },
+  { label: 'Core y Estabilidad', cls:'tier-1', items: ['Rueda abdominal', 'Halo mancuerna', 'Equilibrio BOSU', 'Lateral Swings + Rotation', 'Renegade row'] },
+  { label: 'Cadena Post. y Tracción', cls:'tier-2', items: ['Dumbbell Swings', 'Deadlift', 'High Pulls', 'Remo a una mano', 'Front Lever'] },
+  { label: 'Empuje y Hombro', cls:'tier-3', items: ['Flexiones', 'Handstand', 'Lunge + elevación frontal', 'Curl + Pull over'] },
+  { label: 'Híbridos Metabólicos', cls:'tier-4', items: ['Thrusters', 'Dumbbell Snatch alterno', 'Clean and press', 'Burpees (sin salto)', 'Squat + Rotational Press'] }
 ];
 
 const DAYS = {
   A: {
-    name: 'Empuje + pierna',
-    principals: ['Press de banca', 'Búlgaras'],
+    name: 'Press horizontal + Búlgaras',
+    principals: ['Press horizontal', 'Búlgaras'],
     tiers: ACCESSORY_TIERS
   },
   B: {
-    name: 'Tracción + cadera',
-    principals: ['Dominadas', 'RDL alterno mancuerna'],
+    name: 'Dominadas + RDL alterno',
+    principals: ['Dominadas con lastre', 'RDL alterno'],
     tiers: ACCESSORY_TIERS
   },
   C: {
-    name: 'Empuje sup. + tracción',
-    principals: ['Press inclinado (45º)', 'Chin-ups'],
+    name: 'Press inclinado + Chin Ups',
+    principals: ['Press inclinado', 'Chin Ups'],
     tiers: ACCESSORY_TIERS
   }
 };
 
+// DICCIONARIO DE CONFLICTOS POR DÍA
+const CONFLICTS = {
+  A: ['Flexiones', 'Thrusters', 'Squat + Rotational Press', 'Lunge + elevación frontal'],
+  B: ['Deadlift', 'Dumbbell Swings', 'Front Lever', 'Remo a una mano', 'High Pulls'],
+  C: ['Curl + Pull over', 'Flexiones', 'Handstand', 'Clean and press']
+};
+
 const DEFAULT_SETS = {
-  'Press de banca': 4,
+  'Press horizontal': 4,
   'Búlgaras': 3,
-  'Dominadas': 4,
-  'RDL alterno mancuerna': 3,
-  'Press inclinado (45º)': 4,
-  'Chin-ups': 3
+  'Dominadas con lastre': 4,
+  'RDL alterno': 3,
+  'Press inclinado': 4,
+  'Chin Ups': 3
 };
 
 const STORAGE_KEY = 'javier-rutina-history-v2';
-const CONFIG_STORAGE_KEY = 'javier-rutina-config-v1';
+const CONFIG_STORAGE_KEY = 'javier-rutina-config-v2'; // Cambio a v2 para cargar las 4 familias nuevas limpiamente
 
 let settingsOpen = false;
 let activeDay = 'A';
@@ -376,7 +404,6 @@ function saveConfig(){
   try{ localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(cfg)); }catch(e){}
 }
 
-/* Búsqueda cronológica basada en sessionDate */
 function lastPrincipalEntry(name){
   const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
   for(let i = 0; i < sorted.length; i++){
@@ -804,6 +831,11 @@ function renderPanel(){
   pickLabel.textContent = 'Añadir al circuito';
   panel.appendChild(pickLabel);
 
+  const conflictHint = document.createElement('div');
+  conflictHint.className = 'section-hint';
+  conflictHint.innerHTML = 'Los ejercicios con <b>⚠</b> sobrecargarían la musculatura que ya has trabajado hoy.';
+  panel.appendChild(conflictHint);
+
   day.tiers.forEach(tier => {
     const remaining = tier.items.filter(i => !(i in circuitExercises));
     if(!remaining.length) return;
@@ -818,6 +850,13 @@ function renderPanel(){
     remaining.forEach(item => {
       const chip = document.createElement('div');
       chip.className = 'chip';
+      
+      // CHEQUEO DE CONFLICTOS
+      const isConflict = CONFLICTS[activeDay] && CONFLICTS[activeDay].includes(item);
+      if(isConflict){
+        chip.classList.add('warn');
+      }
+
       const last = lastCircuitExercise(item);
       let staleTxt = '';
       if(!last) {
@@ -826,7 +865,8 @@ function renderPanel(){
         const d = daysBetween(last.date, sessionDate);
         staleTxt = `<span class="stale">${d}d</span>`;
       }
-      chip.innerHTML = '+ ' + item + staleTxt;
+      
+      chip.innerHTML = (isConflict ? '<span style="color:var(--rust)">⚠</span> ' : '+ ') + item + staleTxt;
       chip.onclick = () => {
         circuitExercises[item] = { weight:'', comment:'' };
         renderPanel();
@@ -925,7 +965,6 @@ function renderHistory(){
     return;
   }
   
-  /* ORDENACIÓN POR FECHA REAL (Descendente) */
   const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
   let currentWeek = null;
   sorted.forEach(h => {
@@ -1026,7 +1065,6 @@ document.getElementById('settingsToggle').onclick = () => {
   renderSettingsPanel();
 };
 
-/* Secuencia corregida de inicio para evitar datos en blanco */
 async function initApp(){
   loadConfig();
   await loadHistory();
@@ -1039,3 +1077,5 @@ initApp();
 </script>
 </body>
 </html>
+
+```
