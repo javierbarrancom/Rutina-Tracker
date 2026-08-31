@@ -881,6 +881,17 @@ function renderPanel(){
   host.appendChild(panel);
 }
 
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwAgAXaTHkhTMaMwz_OcF1nwdHrDn4NhcTxufrWRIWN5rCQpuiar-J9zkshlsAw6yQ/exec';
+
+function syncToSheets(session){
+  fetch(SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(session)
+  }).catch(err => console.warn('Sync a Sheets falló (la sesión queda igualmente guardada en local):', err));
+}
+
 async function saveSession(){
   const principalsOut = Object.keys(principalState).map(name => {
     const st = principalState[name];
@@ -914,6 +925,7 @@ async function saveSession(){
   const ok = await saveHistory();
   if(ok){
     msg.textContent = '✓ Guardado permanentemente';
+    syncToSheets(entry);
     editingEntry = null;
     resetDayState();
     renderPanel();
