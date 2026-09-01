@@ -221,15 +221,15 @@
 // ACTUALIZADO: 4 Familias de movimiento
 const ACCESSORY_TIERS = [
   { label: 'Core y Estabilidad', cls:'tier-1', items: ['Rueda abdominal', 'Halo mancuerna', 'Equilibrio BOSU', 'Lateral Swings + Rotation', 'Renegade row'] },
-  { label: 'Cadena Post. y Tracción', cls:'tier-2', items: ['Dumbbell Swings', 'Deadlift', 'High Pulls', 'Remo a una mano', 'Curl + Pull over'] },
+  { label: 'Cadena Post. y Tracción', cls:'tier-2', items: ['Dumbbell Swings', 'Deadlift', 'High Pulls', 'remo', 'Curl + Pull over'] },
   { label: 'Empuje y Hombro', cls:'tier-3', items: ['Flexiones'] },
-  { label: 'Híbridos Metabólicos', cls:'tier-4', items: ['Thrusters', 'Dumbbell Snatch alterno', 'Clean and press', 'Burpees (sin salto)', 'Squat + Rotational Press', 'Lunge + elevación frontal'] }
+  { label: 'Híbridos Metabólicos', cls:'tier-4', items: ['Thrusters', 'Dumbbell Snatch alterno', 'Clean and press', 'burpees con flexion', 'Squat + Rotational Press', 'Lunge + elevación frontal'] }
 ];
 
 const DAYS = {
   A: {
-    name: 'Press horizontal + Búlgaras',
-    principals: ['Press horizontal', 'Búlgaras'],
+    name: 'Press de banca + Búlgaras',
+    principals: ['press de banca', 'Búlgaras'],
     tiers: ACCESSORY_TIERS
   },
   B: {
@@ -247,12 +247,12 @@ const DAYS = {
 // DICCIONARIO DE CONFLICTOS POR DÍA
 const CONFLICTS = {
   A: ['Flexiones', 'Thrusters', 'Squat + Rotational Press', 'Lunge + elevación frontal'],
-  B: ['Deadlift', 'Dumbbell Swings', 'Remo a una mano', 'High Pulls', 'Curl + Pull over'],
+  B: ['Deadlift', 'Dumbbell Swings', 'remo', 'High Pulls', 'Curl + Pull over'],
   C: ['Curl + Pull over', 'Flexiones', 'Clean and press']
 };
 
 const DEFAULT_SETS = {
-  'Press horizontal': 4,
+  'Press de banca': 4,
   'Búlgaras': 3,
   'Dominadas con lastre': 4,
   'RDL alterno': 3,
