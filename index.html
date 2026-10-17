@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rotación de Rutina</title>
+<style>
+  :root{
+    --bg: #1b1f24;
+    --bg-panel: #22272e;
+    --bg-chip: #2b323a;
+    --bg-input: #1a1e23;
+    --line: #384049;
+    --text: #e9e6df;
+    --text-dim: #9aa2ab;
+    --ochre: #c9973a;
+    --teal: #4f8b8f;
+    --rust: #b5533c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    padding:14px 10px 40px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  h1,h2,h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.02em;margin:0;}
+  .wrap{max-width:640px;margin:0 auto;}
+  header{margin-bottom:14px;}
+  header .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ochre);margin-bottom:2px;
+  }
+  header h1{font-size:26px;line-height:1;}
+  header p{color:var(--text-dim);font-size:12px;margin-top:4px;line-height:1.3;}
+
+  .banner{
+    border-radius:6px;padding:8px 10px;font-size:11.5px;margin-bottom:12px;
+    font-family:'IBM Plex Mono',monospace;line-height:1.4;
+  }
+  .banner.error{background:rgba(181,83,60,.15);border:1px solid rgba(181,83,60,.5);color:#e8a893;}
+  .banner.ok{background:rgba(79,139,143,.12);border:1px solid rgba(79,139,143,.4);color:var(--teal);}
+
+  .day-tabs{display:flex;gap:6px;margin:12px 0 12px;}
+  .day-tab{
+    flex:1;padding:8px 4px;background:var(--bg-panel);border:1px solid var(--line);
+    border-radius:6px;text-align:center;cursor:pointer;transition:.15s;
+  }
+  .day-tab .letter{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1;}
+  .day-tab .name{font-size:9.5px;color:var(--text-dim);margin-top:2px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .day-tab.active{border-color:var(--ochre);background:rgba(201,151,58,.1);}
+  .day-tab.active .letter{color:var(--ochre);}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;}
+  .panel h2{font-size:20px;margin-bottom:1px;}
+  .panel .sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ochre);margin:12px 0 6px;display:flex;align-items:center;gap:6px;
+  }
+  .section-label.first{margin-top:0;}
+  .section-hint{font-size:10.5px;color:var(--text-dim);margin:-2px 0 8px;font-style:italic;}
+
+  /* --- Principal exercise card --- */
+  .ex-row{
+    background:var(--bg-chip);border:1px solid var(--line);border-radius:8px;
+    padding:10px 10px 8px;margin-bottom:8px;
+  }
+  .ex-row .ex-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:6px;}
+  .ex-name{font-size:13px;font-weight:600;}
+  .ex-last{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);text-align:right;line-height:1.3;}
+  .ex-last .comment{color:var(--ochre);display:block;}
+
+  .row-line{display:flex;gap:6px;margin-bottom:6px;align-items:flex-end;}
+  .field-wrap{flex:1;}
+  .field-wrap label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px;}
+  
+  /* PREVENCIÓN DE ZOOM */
+  input, textarea, select {
+    background:var(--bg-input);border:1px solid var(--line);border-radius:5px;
+    color:var(--text);font-family:'IBM Plex Mono',monospace;
+    padding:6px 8px;width:100%;
+    font-size:16px !important;
+  }
+  input::placeholder, textarea::placeholder{color:#5a626b;}
+  textarea{resize:none;font-family:'Inter',sans-serif;height:36px;}
+
+  .sets-block label.sets-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;}
+  .sets-grid{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+  .set-input-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:38px;}
+  .set-input-wrap span{font-size:8.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+  .set-input-wrap input{text-align:center;padding:5px 2px;}
+
+  .ex-remove{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--rust);cursor:pointer;margin-top:4px;text-align:right;}
+
+  /* --- Circuit config --- */
+  .circuit-config{
+    background:var(--bg-chip);border:1px solid var(--line);border-radius:8px;
+    padding:10px;margin-bottom:10px;
+  }
+  .circuit-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+
+  .tier-block{margin-bottom:8px;}
+  .tier-label{
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--text-dim);margin-bottom:5px;display:flex;align-items:center;gap:4px;
+  }
+  .tier-dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
+  .tier-1 .tier-dot{background:var(--teal);}
+  .tier-2 .tier-dot{background:var(--ochre);}
+  .tier-3 .tier-dot{background:var(--rust);}
+  .tier-4 .tier-dot{background:#8b949e;}
+  
+  .chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .chip{
+    background:var(--bg-input);border:1px dashed var(--line);color:var(--text-dim);
+    padding:5px 9px;border-radius:12px;font-size:11.5px;cursor:pointer;transition:.12s;
+  }
+  .chip:hover{border-color:var(--teal);color:var(--text);}
+  
+  /* ESTILOS PARA EJERCICIOS CON CONFLICTO */
+  .chip.warn{opacity:0.6; border-color:var(--rust); color:var(--text-dim);}
+  .chip.warn:hover{opacity:1; color:var(--rust); border-color:var(--rust);}
+  
+  .chip .stale{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--ochre);margin-left:3px;}
+
+  .save-row{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+  .save-btn{
+    background:var(--ochre);color:#20160a;border:none;border-radius:6px;
+    padding:10px 14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
+    letter-spacing:.02em;cursor:pointer;width:100%;
+  }
+  .save-btn:active{transform:scale(.98);}
+  .save-msg{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;text-align:center;}
+
+  .history h3{font-size:16px;margin-bottom:8px;}
+  .week-divider{display:flex;align-items:center;gap:8px;margin:12px 0 8px;}
+  .week-divider:first-child{margin-top:0;}
+  .week-divider .line{flex:1;height:1px;background:var(--line);}
+  .week-divider .label{
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ochre);
+    text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;
+  }
+  .hist-entry{padding:8px 0;border-bottom:1px solid var(--line);}
+  .hist-entry:last-child{border-bottom:none;}
+  .hist-head{display:flex;align-items:baseline;gap:6px;margin-bottom:4px;}
+  .hist-day{color:var(--ochre);font-weight:600;font-size:12px;}
+  .hist-date{font-family:'IBM Plex Mono',monospace;color:var(--text-dim);font-size:10.5px;}
+  .hist-actions{margin-left:auto;display:flex;gap:8px;}
+  .hist-action{font-family:'IBM Plex Mono',monospace;font-size:9.5px;cursor:pointer;text-decoration:underline;}
+  .hist-action.edit{color:var(--teal);}
+  .hist-action.del{color:var(--rust);}
+  .editing-banner{
+    background:rgba(201,151,58,.12);border:1px solid rgba(201,151,58,.4);color:var(--ochre);
+    border-radius:6px;padding:8px 10px;font-size:11px;margin-bottom:12px;font-family:'IBM Plex Mono',monospace;
+    display:flex;justify-content:space-between;align-items:center;gap:6px;
+  }
+  .editing-banner button{
+    background:none;border:1px solid var(--ochre);color:var(--ochre);border-radius:4px;
+    padding:4px 8px;font-size:9.5px;cursor:pointer;font-family:'IBM Plex Mono',monospace;
+  }
+  .hist-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 2px;}
+  .hist-ex{font-size:11.5px;margin-bottom:3px;}
+  .hist-ex .n{color:var(--text);font-weight:500;}
+  .hist-ex .v{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-dim);display:block;}
+  .hist-ex .c{color:var(--ochre);font-size:10.5px;font-style:italic;display:block;}
+  .hist-circuit-cfg{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal);margin-bottom:4px;}
+  .empty{color:var(--text-dim);font-size:12px;font-style:italic;padding:8px 0;}
+  .reset{
+    background:none;border:1px solid var(--line);color:var(--text-dim);
+    border-radius:5px;padding:6px 10px;font-size:10.5px;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .reset-confirm-box{
+    margin-top:8px;padding:10px;border:1px solid var(--rust);border-radius:6px;
+    background:rgba(181,83,60,.1);font-size:11.5px;
+  }
+  .reset-confirm-box p{margin:0 0 8px;color:var(--text);}
+  .reset-confirm-box .btns{display:flex;gap:6px;}
+  .reset-confirm-box button{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;border-radius:4px;
+    padding:5px 10px;cursor:pointer;border:1px solid var(--line);
+  }
+  .btn-confirm-yes{background:var(--rust);color:#fff;border-color:var(--rust);}
+  .btn-confirm-no{background:none;color:var(--text-dim);}
+
+  .tier-5 .tier-dot{background:#7c9a6d;}
+  .tier-6 .tier-dot{background:#8a6fb0;}
+  .tier-7 .tier-dot{background:#c27a9a;}
+  .slot-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  .ex-hint{font-size:10.5px;color:var(--text-dim);font-style:italic;margin:-2px 0 6px;}
+  .ex-actions{display:flex;justify-content:flex-end;gap:14px;margin-top:4px;}
+  .ex-swap{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--teal);cursor:pointer;}
+  .ex-remove-inline{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--rust);cursor:pointer;}
+  .circuit-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:2px 0 4px;flex-wrap:wrap;}
+  .check-line{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text);cursor:pointer;}
+  .check-line input[type=checkbox]{width:auto;height:auto;margin:0;}
+  .chip .stale + .stale{margin-left:4px;color:var(--rust);}
+  details.picker{margin-top:10px;}
+  details.picker summary{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--teal);cursor:pointer;padding:6px 0;}
+  select{appearance:auto;}
+  .timer-box{border-radius:10px;padding:16px 12px;text-align:center;border:1px solid var(--line);margin:8px 0 10px;}
+  .timer-work{background:rgba(181,83,60,.18);border-color:var(--rust);}
+  .timer-rest{background:rgba(79,139,143,.15);border-color:var(--teal);}
+  .timer-prep{background:rgba(201,151,58,.12);border-color:var(--ochre);}
+  .timer-paused{opacity:.6;}
+  .timer-phase{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--text-dim);}
+  .timer-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;margin:4px 0 0;}
+  .timer-clock{font-family:'IBM Plex Mono',monospace;font-size:56px;font-weight:500;line-height:1.1;margin:4px 0;}
+  .timer-detail{font-size:11.5px;color:var(--text-dim);}
+  .timer-controls{display:flex;gap:6px;}
+  .timer-controls .reset{flex:1;padding:10px 6px;font-size:12px;}
+  .save-btn:disabled{opacity:.4;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Rotación 3 días · en casa</div>
+    <h1>Tu bloque de hoy</h1>
+    <p>Fijos: series, peso y reps. Accesorios: circuito por tiempo.</p>
+  </header>
+
+  <div id="storageBanner"></div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div style="margin-bottom:12px;">
+    <button class="reset" id="settingsToggle" style="width:100%;">⚙ Editar ejercicios</button>
+  </div>
+  <div id="settingsPanel"></div>
+  <div id="panelHost"></div>
+  <div id="timerHost"></div>
+
+  <div class="panel history">
+    <h3>Historial</h3>
+    <div id="histList"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+      <button class="reset" id="exportBtn">⬇ Exportar</button>
+      <button class="reset" id="importBtn">⬆ Importar</button>
+      <button class="reset" id="resetBtn">Borrar todo</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <div id="resetConfirm"></div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+//  CATÁLOGO DE ACCESORIOS: patrón de movimiento + demanda + compatibilidad 45 s
+// =====================================================================
+const PATTERNS = [
+  { key:'empuje',   label:'Empuje y hombro',        cls:'tier-3' },
+  { key:'traccion', label:'Tracción y escápula',    cls:'tier-2' },
+  { key:'bisagra',  label:'Bisagra de cadera',      cls:'tier-1' },
+  { key:'pierna',   label:'Pierna y gemelos',       cls:'tier-5' },
+  { key:'core',     label:'Core y anti-movimiento', cls:'tier-6' },
+  { key:'carry',    label:'Carry y agarre',         cls:'tier-7' },
+  { key:'cuerpo',   label:'Cuerpo completo',        cls:'tier-4' }
+];
+const DEMAND_RANK = { baja:0, media:1, alta:2 };
+
+// [nombre, patrón, demanda, se propone solo, necesita kettlebell]
+// "se propone solo = false" → ejercicio manual (prevención, calentamiento o técnica lenta): sale en el selector manual
+const DEFAULT_CATALOG = [
+  // Empuje y hombro
+  ['Flexiones', 'empuje', 'media', true, false],
+  ['Flexiones con pausa', 'empuje', 'media', true, false],
+  ['Flexiones con rotación (T push-up)', 'empuje', 'media', true, false],
+  ['Flexiones arqueras', 'empuje', 'alta', true, false],
+  ['Plank con toques de hombro', 'empuje', 'media', true, false],
+  ['Push-up plus (escapular)', 'empuje', 'baja', false, false],
+  ['Rotación externa con goma', 'empuje', 'baja', false, false],
+  // Tracción y escápula
+  ['High Pulls', 'traccion', 'media', true, false],
+  ['Gorilla row', 'traccion', 'media', true, false],
+  ['Curl + Pull over', 'traccion', 'media', true, false],
+  ['Dead hang activo', 'traccion', 'media', true, false],
+  ['Pull-aparts con goma', 'traccion', 'baja', false, false],
+  ['Face pull con goma', 'traccion', 'baja', false, false],
+  // Bisagra de cadera
+  ['Dumbbell Swings', 'bisagra', 'alta', true, false],
+  ['Kettlebell swing', 'bisagra', 'alta', true, true],
+  ['Kettlebell swing a una mano', 'bisagra', 'alta', true, true],
+  ['Deadlift', 'bisagra', 'media', true, false],
+  ['Hip thrust unilateral', 'bisagra', 'media', true, false],
+  ['RDL en staggered stance', 'bisagra', 'media', true, false],
+  // Pierna y gemelos
+  ['Step-up en caja alta', 'pierna', 'media', true, false],
+  ['Gemelos a una pierna con mancuerna', 'pierna', 'media', true, false],
+  ['Sentadilla goblet con tempo', 'pierna', 'media', true, false],
+  ['Kettlebell goblet squat', 'pierna', 'media', true, true],
+  ['Cossack squat (zancada lateral)', 'pierna', 'media', true, false],
+  ['Pistol squat asistido a caja', 'pierna', 'media', true, false],
+  ['Lunge + elevación frontal', 'pierna', 'media', true, false],
+  ['Lunge + curl', 'pierna', 'media', true, false],
+  // Core y anti-movimiento
+  ['Rueda abdominal', 'core', 'media', true, false],
+  ['Lateral Swings + Rotation', 'core', 'media', true, false],
+  ['Renegade row', 'core', 'media', true, false],
+  ['Rodillas a pecho en barra', 'core', 'media', true, false],
+  ['Plank con arrastre de mancuerna', 'core', 'media', true, false],
+  ['Hollow hold', 'core', 'media', true, false],
+  ['Mountain climbers', 'core', 'alta', true, false],
+  ['Halo mancuerna', 'core', 'baja', false, false],
+  ['Equilibrio BOSU', 'core', 'baja', false, false],
+  ['Turkish get-up', 'core', 'media', false, true],
+  // Carry y agarre
+  ['Farmer carry', 'carry', 'media', true, false],
+  ['Suitcase carry', 'carry', 'media', true, false],
+  ['Overhead carry a una mano', 'carry', 'media', true, false],
+  ['Rack carry con kettlebell', 'carry', 'media', true, true],
+  // Cuerpo completo (siempre al final del circuito)
+  ['Thrusters', 'cuerpo', 'alta', true, false],
+  ['Dumbbell Snatch alterno', 'cuerpo', 'alta', true, false],
+  ['Clean and press', 'cuerpo', 'alta', true, false],
+  ['burpees con flexion', 'cuerpo', 'alta', true, false],
+  ['Squat + Rotational Press', 'cuerpo', 'alta', true, false],
+  ['Man makers', 'cuerpo', 'alta', true, false],
+  ['Kettlebell clean and press', 'cuerpo', 'alta', true, true],
+  ['Kettlebell snatch', 'cuerpo', 'alta', true, true]
+].map(([name, pattern, demand, auto, kb]) => ({ name, pattern, demand, auto, kb }));
+
+// =====================================================================
+//  FIJOS POR DÍA
+// =====================================================================
+const DEFAULT_PRINCIPALS = {
+  A: ['Press de banca', 'Búlgaras'],
+  B: ['Dominadas con lastre', 'RDL a dos piernas'],
+  C: ['Press inclinado', 'Remo a una mano']
+};
+const DAYS = {
+  A: { principals: [...DEFAULT_PRINCIPALS.A] },
+  B: { principals: [...DEFAULT_PRINCIPALS.B] },
+  C: { principals: [...DEFAULT_PRINCIPALS.C] }
+};
+function dayName(d){ return DAYS[d].principals.join(' + '); }
+
+const DEFAULT_SETS = {
+  'Press de banca': 4,
+  'Búlgaras': 3,
+  'Dominadas con lastre': 4,
+  'RDL a dos piernas': 3,
+  'Press inclinado': 4,
+  'Remo a una mano': 3,
+  'RDL alterno': 3,
+  'Chin Ups': 3
+};
+
+const PRINCIPAL_HINTS = {
+  'Búlgaras': '2 mancuernas · sube a 18 kg al cerrar 3×8; después tempo o pausa abajo',
+  'RDL a dos piernas': '2 mancuernas · 3 s bajando + 1 s de pausa abajo',
+  'Remo a una mano': 'Pausa 1 s arriba · 3 s bajando · codo hacia la cadera'
+};
+
+// =====================================================================
+//  SLOTS POR DÍA (4 + 1 opcional) y CONFLICTOS
+// =====================================================================
+const SLOTS = {
+  A: {
+    base: [
+      { label:'Tracción',             patterns:['traccion'] },
+      { label:'Bisagra',             patterns:['bisagra'] },
+      { label:'Core',                patterns:['core'] },
+      { label:'Cuerpo completo',     patterns:['cuerpo'] }
+    ],
+    extra: { label:'Rotativo', patterns:['empuje','carry'] }
+  },
+  B: {
+    base: [
+      { label:'Pierna y gemelos',    patterns:['pierna'] },
+      { label:'Empuje / hombro',     patterns:['empuje'] },
+      { label:'Core',                patterns:['core'] },
+      { label:'Cuerpo completo',     patterns:['cuerpo'] }
+    ],
+    extra: { label:'Rotativo', patterns:['carry','traccion'] }
+  },
+  C: {
+    base: [
+      { label:'Pierna y gemelos',    patterns:['pierna'] },
+      { label:'Carry',               patterns:['carry'] },
+      { label:'Core',                patterns:['core'] },
+      { label:'Cuerpo completo',     patterns:['cuerpo'] }
+    ],
+    extra: { label:'Rotativo', patterns:['empuje','traccion'] }
+  }
+};
+
+// Ejercicios concretos que sobrecargan lo ya trabajado ese día
+const CONFLICT_NAMES = {
+  A: ['Flexiones', 'Flexiones con pausa', 'Flexiones con rotación (T push-up)', 'Flexiones arqueras', 'Man makers',
+      'Thrusters', 'Squat + Rotational Press', 'Lunge + elevación frontal'],
+  B: ['High Pulls', 'Curl + Pull over', 'Gorilla row', 'Dead hang activo'],
+  C: ['Curl + Pull over', 'Flexiones', 'Flexiones con pausa', 'Flexiones con rotación (T push-up)', 'Flexiones arqueras',
+      'Man makers', 'Clean and press', 'Kettlebell clean and press', 'Gorilla row']
+};
+// Patrones completos que ese día ya están cubiertos por los fijos
+const CONFLICT_PATTERNS = { A: [], B: ['bisagra'], C: [] };
+
+// =====================================================================
+//  ESTADO
+// =====================================================================
+const STORAGE_KEY = 'javier-rutina-history-v2';
+const CONFIG_STORAGE_KEY = 'javier-rutina-config-v3';
+const OLD_CONFIG_KEY = 'javier-rutina-config-v2';
+
+let CATALOG = [];
+let customAdded = [];
+let removedNames = [];
+let useFifth = false;
+let hasKettlebell = false;
+
+let settingsOpen = false;
+let pickerOpen = false;
+let activeDay = 'A';
+let principalState = {};
+let circuitConfig = { rounds:'3', workSec:'45', restEx:'15', restRounds:'60' };
+let circuitItems = [];          // [{name, weight, comment, slot}]
+let sessionSkipped = new Set();
+let circuitNote = '';
+
+let history = [];
+let sessionDate = new Date().toISOString().slice(0,10);
+let editingEntry = null;
+let confirmingDelete = null;
+
+function availableEx(e){ return !e.kb || hasKettlebell; }
+
+function norm(s){ return String(s || '').trim().toLowerCase(); }
+function sameName(a, b){ return norm(a) === norm(b); }
+
+function showBanner(type, text){
+  document.getElementById('storageBanner').innerHTML = `<div class="banner ${type}">${text}</div>`;
+}
+function clearBanner(){ document.getElementById('storageBanner').innerHTML = ''; }
+function storageAvailable(){
+  try{
+    const t = '__test__';
+    localStorage.setItem(t, '1');
+    localStorage.removeItem(t);
+    return true;
+  }catch(e){ return false; }
+}
+
+// =====================================================================
+//  HISTORIAL (almacenamiento, import/export)
+// =====================================================================
+async function loadHistory(){
+  if(!storageAvailable()){
+    showBanner('error', '⚠ Almacenamiento local bloqueado en este navegador.');
+    history = [];
+    renderHistory();
+    return;
+  }
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    history = raw ? JSON.parse(raw) : [];
+    clearBanner();
+  }catch(e){
+    history = [];
+    showBanner('error', '⚠ No se pudo leer el historial guardado.');
+  }
+  renderHistory();
+}
+
+async function saveHistory(){
+  if(!storageAvailable()){
+    showBanner('error', '⚠ No se pudo guardar: almacenamiento local bloqueado.');
+    return false;
+  }
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    clearBanner();
+    return true;
+  }catch(e){
+    showBanner('error', '⚠ Error al guardar tus datos.');
+    return false;
+  }
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `rutina-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(file){
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!Array.isArray(parsed)) throw new Error('formato inválido');
+      const merge = confirm('¿Fusionar con tu historial actual? Aceptar = fusionar, Cancelar = reemplazar todo.');
+      if(merge){
+        const existingKeys = new Set(history.map(h => h.date + '|' + h.day));
+        parsed.forEach(p => {
+          if(!existingKeys.has(p.date + '|' + p.day)) history.push(p);
+        });
+      } else {
+        history = parsed;
+      }
+      await saveHistory();
+      renderHistory();
+      resetDayState();
+      renderPanel();
+      showBanner('ok', '✓ Copia importada correctamente.');
+    }catch(err){
+      showBanner('error', '⚠ El archivo no es válido.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function daysBetween(dateStrStart, dateStrEnd){
+  const d1 = new Date(dateStrStart.slice(0,10) + 'T00:00:00');
+  const d2 = new Date(dateStrEnd.slice(0,10) + 'T00:00:00');
+  return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
+}
+
+// =====================================================================
+//  CONFIGURACIÓN (solo guarda lo que el usuario cambia respecto al código)
+// =====================================================================
+function rebuildCatalog(){
+  CATALOG = DEFAULT_CATALOG
+    .filter(e => !removedNames.some(n => sameName(n, e.name)))
+    .concat(customAdded.filter(e => !DEFAULT_CATALOG.some(d => sameName(d.name, e.name))));
+}
+
+function validCustom(e){
+  return e && typeof e.name === 'string' && e.name.trim()
+    && PATTERNS.some(p => p.key === e.pattern)
+    && e.demand in DEMAND_RANK;
+}
+
+function migrateV2(){
+  // Recupera ejercicios añadidos a mano en la versión anterior del panel de edición
+  try{
+    const raw = localStorage.getItem(OLD_CONFIG_KEY);
+    if(!raw) return;
+    const cfg = JSON.parse(raw);
+    const OLD = ['Rueda abdominal','Halo mancuerna','Equilibrio BOSU','Lateral Swings + Rotation','Renegade row',
+      'Dumbbell Swings','Deadlift','High Pulls','remo','Curl + Pull over','Flexiones','Thrusters',
+      'Dumbbell Snatch alterno','Clean and press','burpees con flexion','Squat + Rotational Press',
+      'Lunge + elevación frontal'];
+    const tierPattern = ['core','traccion','empuje','cuerpo'];
+    let changed = false;
+    (cfg.tiers || []).forEach((items, i) => {
+      (items || []).forEach(n => {
+        if(typeof n !== 'string') return;
+        if(OLD.some(o => sameName(o, n))) return;
+        if(DEFAULT_CATALOG.some(d => sameName(d.name, n))) return;
+        if(customAdded.some(c => sameName(c.name, n))) return;
+        customAdded.push({ name:n, pattern: tierPattern[i] || 'cuerpo', demand:'media', auto:true, kb:false });
+        changed = true;
+      });
+    });
+    if(changed) saveConfig();
+  }catch(e){}
+}
+
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+    if(raw){
+      const cfg = JSON.parse(raw);
+      if(cfg.principals){
+        Object.keys(cfg.principals).forEach(day => {
+          const arr = cfg.principals[day];
+          if(DAYS[day] && Array.isArray(arr) && arr.length && arr.every(x => typeof x === 'string' && x.trim())){
+            DAYS[day].principals = arr.slice();
+          }
+        });
+      }
+      if(Array.isArray(cfg.added)) customAdded = cfg.added.filter(validCustom).map(e => ({ ...e, auto: e.auto !== undefined ? e.auto !== false : e.tabata !== false, kb: !!e.kb }));
+      if(Array.isArray(cfg.removed)) removedNames = cfg.removed.filter(n => typeof n === 'string');
+      useFifth = !!cfg.useFifth;
+      hasKettlebell = !!cfg.hasKettlebell;
+    } else {
+      migrateV2();
+    }
+  }catch(e){}
+  rebuildCatalog();
+}
+
+function saveConfig(){
+  const principals = {};
+  Object.keys(DAYS).forEach(d => {
+    if(JSON.stringify(DAYS[d].principals) !== JSON.stringify(DEFAULT_PRINCIPALS[d])){
+      principals[d] = DAYS[d].principals;
+    }
+  });
+  const cfg = { principals, added: customAdded, removed: removedNames, useFifth, hasKettlebell };
+  try{ localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(cfg)); }catch(e){}
+}
+
+// =====================================================================
+//  LECTURA DEL HISTORIAL
+// =====================================================================
+function lastPrincipalEntry(name){
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  for(let i = 0; i < sorted.length; i++){
+    if(sorted[i].date.slice(0,10) <= sessionDate){
+      const found = (sorted[i].principals || []).find(e => sameName(e.name, name));
+      if(found) return { date: sorted[i].date, ...found };
+    }
+  }
+  return null;
+}
+
+function lastCircuitExercise(name){
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  for(let i = 0; i < sorted.length; i++){
+    if(sorted[i].date.slice(0,10) <= sessionDate){
+      const c = sorted[i].circuit;
+      if(!c) continue;
+      const found = (c.exercises || []).find(e => sameName(e.name, name));
+      if(found) return { date: sorted[i].date, ...found };
+    }
+  }
+  return null;
+}
+
+// Ejercicios usados en las últimas N sesiones del mismo día
+function recentNames(day, n){
+  const names = new Set();
+  history
+    .filter(h => h.day === day && h.circuit && h.date.slice(0,10) <= sessionDate)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, n)
+    .forEach(s => (s.circuit.exercises || []).forEach(e => names.add(norm(e.name))));
+  return names;
+}
+
+function staleness(name){
+  const last = lastCircuitExercise(name);
+  return last ? daysBetween(last.date, sessionDate) : 9999;
+}
+
+// =====================================================================
+//  LÓGICA DE SLOTS
+// =====================================================================
+function findCatalog(name){
+  return CATALOG.find(e => sameName(e.name, name)) || DEFAULT_CATALOG.find(e => sameName(e.name, name)) || null;
+}
+
+function isConflict(day, name){
+  if((CONFLICT_NAMES[day] || []).some(c => sameName(c, name))) return true;
+  const e = findCatalog(name);
+  return !!(e && (CONFLICT_PATTERNS[day] || []).includes(e.pattern));
+}
+
+function slotsForDay(day){
+  const s = SLOTS[day];
+  return useFifth ? [...s.base, s.extra] : [...s.base];
+}
+
+function slotDef(day, label){
+  const s = SLOTS[day];
+  return [...s.base, s.extra].find(x => x.label === label) || null;
+}
+
+function pickFor(slot, random){
+  const used = new Set(circuitItems.map(i => norm(i.name)));
+  const recent = recentNames(activeDay, 2);
+  const base = CATALOG.filter(e =>
+    slot.patterns.includes(e.pattern) && e.auto !== false && availableEx(e) &&
+    !used.has(norm(e.name)) && !sessionSkipped.has(norm(e.name)));
+  const tiers = [
+    base.filter(e => !isConflict(activeDay, e.name) && !recent.has(norm(e.name))),
+    base.filter(e => !isConflict(activeDay, e.name)),
+    base
+  ];
+  const pool = tiers.find(t => t.length);
+  if(!pool) return null;
+  if(random) return pool[Math.floor(Math.random() * pool.length)];
+  return pool
+    .map(e => ({ e, s: staleness(e.name), r: Math.random() }))
+    .sort((a, b) => (b.s - a.s) || (a.r - b.r))[0].e;
+}
+
+function demandRank(name){
+  const e = findCatalog(name);
+  if(!e) return 1;
+  if(e.pattern === 'cuerpo') return 3;
+  return DEMAND_RANK[e.demand] ?? 1;
+}
+
+function sortCircuit(){
+  circuitItems = circuitItems
+    .map((it, i) => ({ it, i }))
+    .sort((a, b) => (demandRank(a.it.name) - demandRank(b.it.name)) || (a.i - b.i))
+    .map(x => x.it);
+}
+
+function proposeCircuit(randomize){
+  circuitItems = [];
+  sessionSkipped = new Set();
+  circuitNote = '';
+  slotsForDay(activeDay).forEach(slot => {
+    const ex = pickFor(slot, !!randomize);
+    if(ex) circuitItems.push({ name: ex.name, weight:'', comment:'', slot: slot.label });
+  });
+  sortCircuit();
+}
+
+function syncFifth(){
+  const extra = SLOTS[activeDay].extra;
+  const has = circuitItems.some(i => i.slot === extra.label);
+  if(useFifth && !has){
+    const ex = pickFor(extra, false);
+    if(ex){
+      circuitItems.push({ name: ex.name, weight:'', comment:'', slot: extra.label });
+      if(!editingEntry) sortCircuit();
+    } else {
+      circuitNote = 'No hay ejercicios disponibles para el 5º slot.';
+    }
+  }
+  if(!useFifth && has){
+    circuitItems = circuitItems.filter(i => i.slot !== extra.label);
+  }
+}
+
+function swapItem(idx){
+  const it = circuitItems[idx];
+  const slot = it && it.slot ? slotDef(activeDay, it.slot) : null;
+  if(!slot) return;
+  sessionSkipped.add(norm(it.name));
+  const ex = pickFor(slot, true);
+  if(!ex){
+    sessionSkipped.delete(norm(it.name));
+    circuitNote = 'No hay más opciones para ese slot.';
+  } else {
+    circuitNote = '';
+    circuitItems[idx] = { name: ex.name, weight:'', comment:'', slot: slot.label };
+    if(!editingEntry) sortCircuit();
+  }
+  renderPanel();
+}
+
+// =====================================================================
+//  ESTADO DE SESIÓN
+// =====================================================================
+function resetDayState(){
+  const day = DAYS[activeDay];
+  principalState = {};
+  day.principals.forEach(p => {
+    const last = lastPrincipalEntry(p);
+    const setsCount = last && last.reps ? last.reps.length : (DEFAULT_SETS[p] || 4);
+    principalState[p] = { weight:'', setsCount: setsCount, reps: new Array(setsCount).fill(''), comment:'' };
+  });
+  circuitConfig = { rounds:'3', workSec:'45', restEx:'15', restRounds:'60' };
+  proposeCircuit();
+}
+
+function loadEntryForEditing(entry){
+  const idx = history.indexOf(entry);
+  if(idx === -1) return;
+  history.splice(idx, 1);
+  editingEntry = entry;
+
+  activeDay = entry.day;
+  sessionDate = entry.date.slice(0,10);
+
+  principalState = {};
+  (entry.principals || []).forEach(p => {
+    principalState[p.name] = {
+      weight: p.weight || '',
+      setsCount: (p.reps || []).length || 0,
+      reps: (p.reps || []).slice(),
+      comment: p.comment || ''
+    };
+  });
+
+  circuitConfig = entry.circuit
+    ? { rounds: entry.circuit.rounds || '', workSec: entry.circuit.workSec || '', restEx: entry.circuit.restEx || '', restRounds: entry.circuit.restRounds || '' }
+    : { rounds:'', workSec:'', restEx:'', restRounds:'' };
+  circuitItems = ((entry.circuit && entry.circuit.exercises) || []).map(e => ({
+    name: e.name, weight: e.weight || '', comment: e.comment || '', slot: null
+  }));
+  sessionSkipped = new Set();
+  circuitNote = '';
+
+  renderTabs();
+  renderPanel();
+  renderHistory();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteEntry(entry){
+  const idx = history.indexOf(entry);
+  if(idx === -1) return;
+  history.splice(idx, 1);
+  await saveHistory();
+  renderHistory();
+  resetDayState();
+  renderPanel();
+}
+
+// =====================================================================
+//  PANEL DE EDICIÓN DE EJERCICIOS
+// =====================================================================
+function removeFromCatalog(name){
+  const ia = customAdded.findIndex(e => sameName(e.name, name));
+  if(ia >= 0) customAdded.splice(ia, 1);
+  else if(!removedNames.some(n => sameName(n, name))) removedNames.push(name);
+  rebuildCatalog();
+  saveConfig();
+}
+
+function addToCatalog(name, pattern, demand, auto, kb){
+  if(CATALOG.some(e => sameName(e.name, name))) return false;
+  const wasRemoved = removedNames.findIndex(n => sameName(n, name));
+  if(wasRemoved >= 0 && DEFAULT_CATALOG.some(d => sameName(d.name, name))){
+    removedNames.splice(wasRemoved, 1);
+  } else {
+    customAdded.push({ name, pattern, demand, auto, kb: !!kb });
+  }
+  rebuildCatalog();
+  saveConfig();
+  return true;
+}
+
+function renderSettingsPanel(){
+  const host = document.getElementById('settingsPanel');
+  host.innerHTML = '';
+  if(!settingsOpen) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = 'Editar ejercicios';
+  panel.appendChild(h2);
+  const sub = document.createElement('div');
+  sub.className = 'sub';
+  sub.textContent = 'No afecta a sesiones previas';
+  panel.appendChild(sub);
+
+  const kbLabel = document.createElement('label');
+  kbLabel.className = 'check-line';
+  kbLabel.style.marginBottom = '10px';
+  const kbBox = document.createElement('input');
+  kbBox.type = 'checkbox';
+  kbBox.checked = hasKettlebell;
+  kbBox.onchange = () => {
+    hasKettlebell = kbBox.checked;
+    saveConfig();
+    renderSettingsPanel();
+    renderPanel();
+  };
+  kbLabel.appendChild(kbBox);
+  kbLabel.appendChild(document.createTextNode(' Tengo kettlebell (activa los ejercicios marcados KB)'));
+  panel.appendChild(kbLabel);
+
+  const pLabel = document.createElement('div');
+  pLabel.className = 'section-label first';
+  pLabel.textContent = 'Fijos por día';
+  panel.appendChild(pLabel);
+
+  Object.keys(DAYS).forEach(dayKey => {
+    const dayBlock = document.createElement('div');
+    dayBlock.style.marginBottom = '10px';
+    const dTitle = document.createElement('div');
+    dTitle.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;';
+    dTitle.textContent = `Día ${dayKey} — ${dayName(dayKey)}`;
+    dayBlock.appendChild(dTitle);
+
+    DAYS[dayKey].principals.forEach((name, idx) => {
+      const row = document.createElement('div');
+      row.className = 'row-line';
+      row.innerHTML = `<div class="field-wrap"><input type="text" data-role="principalName"></div>`;
+      const inp = row.querySelector('input');
+      inp.value = name;
+      inp.onchange = () => {
+        const newName = inp.value.trim();
+        if(!newName){ inp.value = DAYS[dayKey].principals[idx]; return; }
+        DAYS[dayKey].principals[idx] = newName;
+        saveConfig();
+        if(activeDay === dayKey && !editingEntry){ resetDayState(); renderPanel(); renderTabs(); }
+        else renderTabs();
+      };
+      dayBlock.appendChild(row);
+    });
+    panel.appendChild(dayBlock);
+  });
+
+  const aLabel = document.createElement('div');
+  aLabel.className = 'section-label';
+  aLabel.textContent = 'Accesorios por patrón';
+  panel.appendChild(aLabel);
+  const aHint = document.createElement('div');
+  aHint.className = 'section-hint';
+  aHint.textContent = 'Entre paréntesis: demanda. "manual" = no se propone solo (prevención, calentamiento o técnica lenta). "KB" = necesita kettlebell.';
+  panel.appendChild(aHint);
+
+  PATTERNS.forEach(pat => {
+    const items = CATALOG.filter(e => e.pattern === pat.key);
+    const block = document.createElement('div');
+    block.className = 'tier-block';
+    const label = document.createElement('div');
+    label.className = 'tier-label ' + pat.cls;
+    label.innerHTML = `<span class="tier-dot"></span>${pat.label}`;
+    block.appendChild(label);
+
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    items.forEach(item => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.style.cursor = 'default';
+      const itemSpan = document.createElement('span');
+      itemSpan.textContent = `${item.name} (${item.demand})${item.auto === false ? ' · manual' : ''}${item.kb ? ' · KB' : ''}`;
+      const removeSpan = document.createElement('span');
+      removeSpan.textContent = ' ✕';
+      removeSpan.style.cssText = 'color:var(--rust);cursor:pointer;margin-left:4px;';
+      removeSpan.onclick = () => {
+        removeFromCatalog(item.name);
+        renderSettingsPanel();
+        renderPanel();
+      };
+      chip.appendChild(itemSpan);
+      chip.appendChild(removeSpan);
+      chips.appendChild(chip);
+    });
+    block.appendChild(chips);
+    panel.appendChild(block);
+  });
+
+  const addLabel = document.createElement('div');
+  addLabel.className = 'section-label';
+  addLabel.textContent = 'Añadir ejercicio';
+  panel.appendChild(addLabel);
+
+  const addBox = document.createElement('div');
+  addBox.className = 'circuit-config';
+  addBox.innerHTML = `
+    <div class="field-wrap" style="margin-bottom:6px;"><label>Nombre</label><input type="text" data-role="newName" placeholder="Nuevo ejercicio..."></div>
+    <div class="circuit-config-grid">
+      <div class="field-wrap"><label>Patrón</label><select data-role="newPattern">${PATTERNS.map(p => `<option value="${p.key}">${p.label}</option>`).join('')}</select></div>
+      <div class="field-wrap"><label>Demanda</label><select data-role="newDemand"><option value="baja">baja</option><option value="media" selected>media</option><option value="alta">alta</option></select></div>
+    </div>
+    <label class="check-line"><input type="checkbox" data-role="newAuto" checked> Proponer automáticamente en el circuito</label>
+    <label class="check-line" style="margin-top:6px;"><input type="checkbox" data-role="newKb"> Necesita kettlebell</label>
+  `;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'reset';
+  addBtn.style.marginTop = '8px';
+  addBtn.textContent = '+ Añadir';
+  addBtn.onclick = () => {
+    const name = addBox.querySelector('[data-role="newName"]').value.trim();
+    if(!name) return;
+    const ok = addToCatalog(
+      name,
+      addBox.querySelector('[data-role="newPattern"]').value,
+      addBox.querySelector('[data-role="newDemand"]').value,
+      addBox.querySelector('[data-role="newAuto"]').checked,
+      addBox.querySelector('[data-role="newKb"]').checked
+    );
+    if(ok){ renderSettingsPanel(); renderPanel(); }
+  };
+  addBox.appendChild(addBtn);
+  panel.appendChild(addBox);
+
+  host.appendChild(panel);
+}
+
+// =====================================================================
+//  PESTAÑAS, FIJOS, CIRCUITO
+// =====================================================================
+function renderTabs(){
+  const host = document.getElementById('dayTabs');
+  host.innerHTML = '';
+  Object.keys(DAYS).forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'day-tab' + (d === activeDay ? ' active' : '');
+    el.innerHTML = `<div class="letter">${d}</div><div class="name">${dayName(d)}</div>`;
+    el.onclick = () => {
+      activeDay = d;
+      editingEntry = null;
+      resetDayState();
+      renderPanel();
+      renderTabs();
+    };
+    host.appendChild(el);
+  });
+}
+
+function principalNames(){
+  return editingEntry ? Object.keys(principalState) : DAYS[activeDay].principals;
+}
+
+function principalRow(name){
+  const st = principalState[name];
+  const last = lastPrincipalEntry(name);
+  const wrap = document.createElement('div');
+  wrap.className = 'ex-row';
+
+  const lastReps = last && last.reps ? last.reps.join(',') : null;
+  const daysDiff = last ? daysBetween(last.date, sessionDate) : 0;
+  const lastLine = last
+    ? `últ: ${lastReps || '–'} reps @ ${last.weight || '–'}kg · ${daysDiff}d`
+    : 'sin datos';
+  const commentLine = last && last.comment ? `<span class="comment">"${last.comment}"</span>` : '';
+  const hint = PRINCIPAL_HINTS[name] ? `<div class="ex-hint">${PRINCIPAL_HINTS[name]}</div>` : '';
+
+  wrap.innerHTML = `
+    <div class="ex-top">
+      <div class="ex-name">${name}</div>
+      <div class="ex-last">${lastLine}${commentLine}</div>
+    </div>
+    ${hint}
+    <div class="row-line">
+      <div class="field-wrap">
+        <label>Peso (kg)</label>
+        <input type="text" inputmode="decimal" placeholder="${last ? last.weight || '—' : '—'}" data-role="weight">
+      </div>
+      <div class="field-wrap">
+        <label>Nº series</label>
+        <input type="text" inputmode="numeric" data-role="setsCount" value="${st.setsCount}">
+      </div>
+    </div>
+    <div class="sets-block">
+      <label class="sets-label">Reps por serie</label>
+      <div class="sets-grid" data-role="setsGrid"></div>
+    </div>
+    <div class="row-line" style="margin-top:2px;">
+      <div class="field-wrap">
+        <label>Comentario</label>
+        <textarea rows="1" placeholder="ej. subir peso, molestias..." data-role="comment"></textarea>
+      </div>
+    </div>
+  `;
+
+  const weightInput = wrap.querySelector('[data-role="weight"]');
+  weightInput.value = st.weight;
+  weightInput.oninput = () => { st.weight = weightInput.value; };
+
+  const setsCountInput = wrap.querySelector('[data-role="setsCount"]');
+  setsCountInput.oninput = () => {
+    let n = parseInt(setsCountInput.value) || 0;
+    n = Math.max(0, Math.min(n, 10));
+    st.setsCount = n;
+    const cur = st.reps;
+    const next = new Array(n).fill('');
+    for(let i = 0; i < Math.min(n, cur.length); i++) next[i] = cur[i];
+    st.reps = next;
+    renderSetsGrid();
+  };
+
+  const commentInput = wrap.querySelector('[data-role="comment"]');
+  commentInput.value = st.comment;
+  commentInput.oninput = () => { st.comment = commentInput.value; };
+
+  function renderSetsGrid(){
+    const grid = wrap.querySelector('[data-role="setsGrid"]');
+    grid.innerHTML = '';
+    for(let i = 0; i < st.setsCount; i++){
+      const setWrap = document.createElement('div');
+      setWrap.className = 'set-input-wrap';
+      const lastRepVal = last && last.reps && last.reps[i] ? last.reps[i] : '—';
+      setWrap.innerHTML = `<span>S${i+1}</span><input type="text" inputmode="numeric" placeholder="${lastRepVal}">`;
+      const inp = setWrap.querySelector('input');
+      inp.value = st.reps[i] || '';
+      inp.oninput = () => { st.reps[i] = inp.value; };
+      grid.appendChild(setWrap);
+    }
+  }
+  renderSetsGrid();
+
+  return wrap;
+}
+
+function circuitConfigBlock(){
+  const wrap = document.createElement('div');
+  wrap.className = 'circuit-config';
+  wrap.innerHTML = `
+    <div class="section-label first" style="margin-bottom:6px;">Configuración circuito</div>
+    <div class="circuit-config-grid">
+      <div class="field-wrap"><label>Series</label><input type="text" inputmode="numeric" data-role="rounds" placeholder="ej. 3"></div>
+      <div class="field-wrap"><label>Trabajo (s)</label><input type="text" inputmode="numeric" data-role="workSec" placeholder="ej. 45"></div>
+      <div class="field-wrap"><label>Desc. Ejerc (s)</label><input type="text" inputmode="numeric" data-role="restEx" placeholder="ej. 15"></div>
+      <div class="field-wrap"><label>Desc. Series (s)</label><input type="text" inputmode="numeric" data-role="restRounds" placeholder="ej. 60"></div>
+    </div>
+  `;
+  ['rounds','workSec','restEx','restRounds'].forEach(role => {
+    const inp = wrap.querySelector(`[data-role="${role}"]`);
+    inp.value = circuitConfig[role];
+    inp.oninput = () => { circuitConfig[role] = inp.value; };
+  });
+  return wrap;
+}
+
+function circuitExerciseRow(it, idx){
+  const last = lastCircuitExercise(it.name);
+  const cat = findCatalog(it.name);
+  const wrap = document.createElement('div');
+  wrap.className = 'ex-row';
+  const daysDiff = last ? daysBetween(last.date, sessionDate) : 0;
+  const lastLine = last
+    ? `últ: ${last.weight ? last.weight + 'kg' : 'sin peso'} · ${daysDiff}d`
+    : 'sin datos';
+  const commentLine = last && last.comment ? `<span class="comment">"${last.comment}"</span>` : '';
+  const tagParts = [];
+  if(it.slot) tagParts.push(it.slot);
+  if(cat) tagParts.push('demanda ' + cat.demand);
+  const tag = tagParts.length ? `<div class="slot-tag">${idx + 1}. ${tagParts.join(' · ')}</div>` : `<div class="slot-tag">${idx + 1}.</div>`;
+
+  wrap.innerHTML = `
+    ${tag}
+    <div class="ex-top">
+      <div class="ex-name">${it.name}</div>
+      <div class="ex-last">${lastLine}${commentLine}</div>
+    </div>
+    <div class="row-line">
+      <div class="field-wrap">
+        <label>Peso (kg) — opcional</label>
+        <input type="text" inputmode="decimal" placeholder="${last && last.weight ? last.weight : 'sin peso'}" data-role="weight">
+      </div>
+    </div>
+    <div class="row-line">
+      <div class="field-wrap">
+        <label>Comentario</label>
+        <textarea rows="1" placeholder="ej. fácil, molestias..." data-role="comment"></textarea>
+      </div>
+    </div>
+  `;
+  const weightInput = wrap.querySelector('[data-role="weight"]');
+  weightInput.value = it.weight;
+  weightInput.oninput = () => { it.weight = weightInput.value; };
+  const commentInput = wrap.querySelector('[data-role="comment"]');
+  commentInput.value = it.comment;
+  commentInput.oninput = () => { it.comment = commentInput.value; };
+
+  const actions = document.createElement('div');
+  actions.className = 'ex-actions';
+  if(it.slot && slotDef(activeDay, it.slot)){
+    const swap = document.createElement('span');
+    swap.className = 'ex-swap';
+    swap.textContent = '↻ cambiar';
+    swap.onclick = () => swapItem(idx);
+    actions.appendChild(swap);
+  }
+  const removeBtn = document.createElement('span');
+  removeBtn.className = 'ex-remove-inline';
+  removeBtn.textContent = '✕ quitar';
+  removeBtn.onclick = () => { circuitItems.splice(idx, 1); circuitNote = ''; renderPanel(); };
+  actions.appendChild(removeBtn);
+  wrap.appendChild(actions);
+
+  return wrap;
+}
+
+function renderPanel(){
+  const host = document.getElementById('panelHost');
+  host.innerHTML = '';
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  if(editingEntry){
+    const editBanner = document.createElement('div');
+    editBanner.className = 'editing-banner';
+    editBanner.innerHTML = `<span>✎ Editando sesión ${new Date(editingEntry.date).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}.</span>`;
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.onclick = () => {
+      history.push(editingEntry);
+      editingEntry = null;
+      resetDayState();
+      renderTabs();
+      renderPanel();
+      renderHistory();
+    };
+    editBanner.appendChild(cancelBtn);
+    panel.appendChild(editBanner);
+  }
+
+  const h2 = document.createElement('h2');
+  h2.textContent = `Día ${activeDay}`;
+  const sub = document.createElement('div');
+  sub.className = 'sub';
+  sub.textContent = dayName(activeDay);
+  panel.appendChild(h2);
+  panel.appendChild(sub);
+
+  const pLabel = document.createElement('div');
+  pLabel.className = 'section-label first';
+  pLabel.textContent = 'Fecha';
+  panel.appendChild(pLabel);
+  const dateWrap = document.createElement('div');
+  dateWrap.className = 'row-line';
+  dateWrap.innerHTML = `<div class="field-wrap"><input type="date" data-role="sessionDate"></div>`;
+  const dateInput = dateWrap.querySelector('[data-role="sessionDate"]');
+  dateInput.value = sessionDate;
+  dateInput.onchange = () => {
+    sessionDate = dateInput.value;
+    if(!editingEntry) resetDayState();
+    renderPanel();
+  };
+  panel.appendChild(dateWrap);
+
+  const pLabel2 = document.createElement('div');
+  pLabel2.className = 'section-label';
+  pLabel2.textContent = 'Fijos';
+  panel.appendChild(pLabel2);
+  principalNames().forEach(p => { if(principalState[p]) panel.appendChild(principalRow(p)); });
+
+  const cLabel = document.createElement('div');
+  cLabel.className = 'section-label';
+  cLabel.textContent = 'Circuito accesorios';
+  panel.appendChild(cLabel);
+  panel.appendChild(circuitConfigBlock());
+
+  // Controles de la propuesta
+  const ctl = document.createElement('div');
+  ctl.className = 'circuit-controls';
+  const fifthLabel = document.createElement('label');
+  fifthLabel.className = 'check-line';
+  const fifth = document.createElement('input');
+  fifth.type = 'checkbox';
+  fifth.checked = useFifth;
+  fifth.onchange = () => {
+    useFifth = fifth.checked;
+    saveConfig();
+    syncFifth();
+    renderPanel();
+  };
+  fifthLabel.appendChild(fifth);
+  fifthLabel.appendChild(document.createTextNode(' 5º ejercicio (rotativo)'));
+  ctl.appendChild(fifthLabel);
+  const reroll = document.createElement('button');
+  reroll.className = 'reset';
+  reroll.textContent = '🎲 Proponer de nuevo';
+  reroll.onclick = () => { proposeCircuit(true); renderPanel(); };
+  ctl.appendChild(reroll);
+  panel.appendChild(ctl);
+
+  const listLabel = document.createElement('div');
+  listLabel.className = 'section-label';
+  listLabel.textContent = 'Ejercicios de hoy (ordenados por demanda)';
+  panel.appendChild(listLabel);
+
+  if(circuitNote){
+    const note = document.createElement('div');
+    note.className = 'section-hint';
+    note.textContent = circuitNote;
+    panel.appendChild(note);
+  }
+  if(!circuitItems.length){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Sin ejercicios en el circuito.';
+    panel.appendChild(empty);
+  }
+  circuitItems.forEach((it, idx) => panel.appendChild(circuitExerciseRow(it, idx)));
+
+  // Selector manual
+  const det = document.createElement('details');
+  det.className = 'picker';
+  det.open = pickerOpen;
+  det.ontoggle = () => { pickerOpen = det.open; };
+  const summ = document.createElement('summary');
+  summ.textContent = 'Añadir otro ejercicio manualmente';
+  det.appendChild(summ);
+
+  const conflictHint = document.createElement('div');
+  conflictHint.className = 'section-hint';
+  conflictHint.style.marginTop = '8px';
+  conflictHint.innerHTML = 'Los ejercicios con <b>⚠</b> sobrecargarían lo que ya has trabajado hoy.';
+  det.appendChild(conflictHint);
+
+  PATTERNS.forEach(pat => {
+    const remaining = CATALOG.filter(e => e.pattern === pat.key && availableEx(e) && !circuitItems.some(i => sameName(i.name, e.name)));
+    if(!remaining.length) return;
+    const block = document.createElement('div');
+    block.className = 'tier-block';
+    const label = document.createElement('div');
+    label.className = 'tier-label ' + pat.cls;
+    label.innerHTML = `<span class="tier-dot"></span>${pat.label}`;
+    block.appendChild(label);
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    remaining.forEach(e => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const conflict = isConflict(activeDay, e.name);
+      if(conflict) chip.classList.add('warn');
+      const last = lastCircuitExercise(e.name);
+      const staleTxt = last
+        ? `<span class="stale">${daysBetween(last.date, sessionDate)}d</span>`
+        : '<span class="stale">nunca</span>';
+      const noTabata = e.auto === false ? '<span class="stale">manual</span>' : '';
+      chip.innerHTML = (conflict ? '<span style="color:var(--rust)">⚠</span> ' : '+ ') + e.name + staleTxt + noTabata;
+      chip.onclick = () => {
+        circuitItems.push({ name: e.name, weight:'', comment:'', slot:null });
+        if(!editingEntry) sortCircuit();
+        circuitNote = '';
+        renderPanel();
+      };
+      chips.appendChild(chip);
+    });
+    block.appendChild(chips);
+    det.appendChild(block);
+  });
+  panel.appendChild(det);
+
+  const saveRow = document.createElement('div');
+  saveRow.className = 'save-row';
+  const btn = document.createElement('button');
+  btn.className = 'save-btn';
+  btn.textContent = 'Guardar sesión de hoy';
+  btn.onclick = saveSession;
+  const msg = document.createElement('div');
+  msg.className = 'save-msg';
+  msg.id = 'saveMsg';
+  saveRow.appendChild(btn);
+  saveRow.appendChild(msg);
+  panel.appendChild(saveRow);
+
+  host.appendChild(panel);
+  renderTimer();
+}
+
+async function saveSession(){
+  const principalsOut = Object.keys(principalState).map(name => {
+    const st = principalState[name];
+    return { name, weight: st.weight, reps: st.reps.slice(0, st.setsCount), comment: st.comment };
+  });
+
+  const circuitExOut = circuitItems.map(it => ({ name: it.name, weight: it.weight, comment: it.comment }));
+  const circuitOut = circuitExOut.length ? {
+    rounds: circuitConfig.rounds, workSec: circuitConfig.workSec,
+    restEx: circuitConfig.restEx, restRounds: circuitConfig.restRounds,
+    exercises: circuitExOut
+  } : null;
+
+  const now = new Date();
+  const [y, m, d] = sessionDate.split('-').map(Number);
+  const entryDate = new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds());
+
+  const entry = { day: activeDay, date: entryDate.toISOString(), principals: principalsOut, circuit: circuitOut };
+  const msg = document.getElementById('saveMsg');
+  msg.textContent = 'guardando…';
+
+  const snapshotPrincipals = JSON.parse(JSON.stringify(principalState));
+  const snapshotCircuitConfig = JSON.parse(JSON.stringify(circuitConfig));
+  const snapshotItems = JSON.parse(JSON.stringify(circuitItems));
+  const snapshotDate = sessionDate;
+
+  history.push(entry);
+  const ok = await saveHistory();
+  if(ok){
+    msg.textContent = '✓ Guardado permanentemente';
+    editingEntry = null;
+    resetDayState();
+    renderPanel();
+    renderHistory();
+  } else {
+    history.pop();
+    principalState = snapshotPrincipals;
+    circuitConfig = snapshotCircuitConfig;
+    circuitItems = snapshotItems;
+    sessionDate = snapshotDate;
+    msg.textContent = '✕ Error al guardar';
+  }
+}
+
+// =====================================================================
+//  TEMPORIZADOR DEL CIRCUITO (trabajo / descanso / descanso entre series)
+// =====================================================================
+const timer = { phases:[], idx:0, endAt:0, leftMs:0, running:false, paused:false, handle:null, wakeLock:null, lastBeepSec:-1, done:false };
+let audioCtx = null;
+
+function beep(freq, dur){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = freq;
+    g.gain.value = 0.15;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + (dur || 0.18));
+  }catch(e){}
+}
+function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+function buildPhases(){
+  const names = circuitItems.map(i => i.name);
+  if(!names.length) return [];
+  const work = parseInt(circuitConfig.workSec) || 45;
+  const restEx = parseInt(circuitConfig.restEx) || 15;
+  const restR = parseInt(circuitConfig.restRounds) || 60;
+  const rounds = parseInt(circuitConfig.rounds) || 3;
+  const ph = [{ type:'prep', dur:5, label:'Prepárate', next:names[0] }];
+  for(let r = 1; r <= rounds; r++){
+    names.forEach((n, i) => {
+      ph.push({ type:'work', dur:work, label:n, round:r, rounds, ex:i + 1, exs:names.length });
+      const isLast = i === names.length - 1;
+      if(!isLast) ph.push({ type:'rest', dur:restEx, label:'Descanso', next:names[i + 1], round:r, rounds });
+      else if(r < rounds) ph.push({ type:'rest', dur:restR, label:'Descanso entre series', next:names[0], round:r + 1, rounds });
+    });
+  }
+  return ph;
+}
+
+async function acquireWakeLock(){
+  try{ if(navigator.wakeLock) timer.wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+}
+function releaseWakeLock(){
+  try{ if(timer.wakeLock){ timer.wakeLock.release(); timer.wakeLock = null; } }catch(e){}
+}
+
+function startPhase(i){
+  const p = timer.phases[i];
+  if(!p){ finishTimer(); return; }
+  timer.idx = i;
+  timer.endAt = Date.now() + p.dur * 1000;
+  timer.leftMs = p.dur * 1000;
+  timer.lastBeepSec = -1;
+  if(p.type === 'work'){ beep(880, 0.3); vibrate(200); }
+  else if(p.type === 'rest'){ beep(440, 0.25); vibrate(100); }
+  renderTimer();
+}
+
+function timerTick(){
+  if(!timer.running || timer.paused) return;
+  const msLeft = timer.endAt - Date.now();
+  if(msLeft <= 0){ startPhase(timer.idx + 1); return; }
+  timer.leftMs = msLeft;
+  const secs = Math.ceil(msLeft / 1000);
+  if(secs <= 3 && secs !== timer.lastBeepSec){ timer.lastBeepSec = secs; beep(660, 0.1); }
+  updateTimerClock();
+}
+
+function fmtClock(ms){
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function updateTimerClock(){
+  const el = document.getElementById('timerClock');
+  if(el) el.textContent = fmtClock(timer.leftMs);
+}
+
+function startTimer(){
+  const phases = buildPhases();
+  if(!phases.length) return;
+  timer.phases = phases;
+  timer.running = true;
+  timer.paused = false;
+  timer.done = false;
+  acquireWakeLock();
+  beep(1, 0.01); // desbloquea el audio en el gesto del usuario
+  clearInterval(timer.handle);
+  timer.handle = setInterval(timerTick, 250);
+  startPhase(0);
+}
+function pauseTimer(){
+  if(!timer.running) return;
+  if(!timer.paused){ timer.paused = true; timer.leftMs = Math.max(0, timer.endAt - Date.now()); }
+  else { timer.paused = false; timer.endAt = Date.now() + timer.leftMs; }
+  renderTimer();
+}
+function skipPhase(){ if(timer.running) startPhase(timer.idx + 1); }
+function stopTimer(){
+  clearInterval(timer.handle);
+  timer.running = false; timer.paused = false; timer.done = false;
+  releaseWakeLock();
+  renderTimer();
+}
+function finishTimer(){
+  clearInterval(timer.handle);
+  timer.running = false; timer.paused = false; timer.done = true;
+  releaseWakeLock();
+  beep(880, 0.2); setTimeout(() => beep(880, 0.2), 300); setTimeout(() => beep(1175, 0.4), 600);
+  vibrate([200, 100, 200, 100, 400]);
+  renderTimer();
+}
+
+function renderTimer(){
+  const host = document.getElementById('timerHost');
+  if(!host) return;
+  host.innerHTML = '';
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+
+  const h3 = document.createElement('h2');
+  h3.textContent = 'Temporizador';
+  panel.appendChild(h3);
+
+  if(!timer.running){
+    const work = parseInt(circuitConfig.workSec) || 45;
+    const restEx = parseInt(circuitConfig.restEx) || 15;
+    const restR = parseInt(circuitConfig.restRounds) || 60;
+    const rounds = parseInt(circuitConfig.rounds) || 3;
+    const sub = document.createElement('div');
+    sub.className = 'sub';
+    sub.textContent = timer.done
+      ? '✓ Circuito terminado'
+      : `${circuitItems.length} ejercicios · ${rounds} series · ${work}s / ${restEx}s · ${restR}s entre series`;
+    panel.appendChild(sub);
+    const start = document.createElement('button');
+    start.className = 'save-btn';
+    start.textContent = timer.done ? '▶ Repetir circuito' : '▶ Iniciar circuito';
+    start.disabled = !circuitItems.length;
+    start.onclick = startTimer;
+    panel.appendChild(start);
+  } else {
+    const p = timer.phases[timer.idx];
+    const box = document.createElement('div');
+    box.className = 'timer-box timer-' + p.type + (timer.paused ? ' timer-paused' : '');
+    let title = '';
+    let detail = '';
+    if(p.type === 'work'){
+      title = p.label;
+      detail = `Ejercicio ${p.ex}/${p.exs} · Serie ${p.round}/${p.rounds}`;
+    } else if(p.type === 'rest'){
+      title = p.label;
+      detail = `Siguiente: ${p.next}` + (p.round ? ` · Serie ${p.round}/${p.rounds}` : '');
+    } else {
+      title = p.label;
+      detail = `Primero: ${p.next}`;
+    }
+    box.innerHTML = `
+      <div class="timer-phase">${p.type === 'work' ? 'TRABAJO' : p.type === 'rest' ? 'DESCANSO' : 'PREPARACIÓN'}${timer.paused ? ' · PAUSA' : ''}</div>
+      <div class="timer-title">${title}</div>
+      <div class="timer-clock" id="timerClock">${fmtClock(timer.leftMs)}</div>
+      <div class="timer-detail">${detail}</div>
+    `;
+    panel.appendChild(box);
+
+    const row = document.createElement('div');
+    row.className = 'timer-controls';
+    const bPause = document.createElement('button');
+    bPause.className = 'reset';
+    bPause.textContent = timer.paused ? '▶ Reanudar' : '⏸ Pausa';
+    bPause.onclick = pauseTimer;
+    const bSkip = document.createElement('button');
+    bSkip.className = 'reset';
+    bSkip.textContent = '⏭ Saltar';
+    bSkip.onclick = skipPhase;
+    const bStop = document.createElement('button');
+    bStop.className = 'reset';
+    bStop.textContent = '⏹ Parar';
+    bStop.onclick = stopTimer;
+    row.appendChild(bPause); row.appendChild(bSkip); row.appendChild(bStop);
+    panel.appendChild(row);
+  }
+  host.appendChild(panel);
+}
+
+// =====================================================================
+//  HISTORIAL (vista)
+// =====================================================================
+function weekKey(dateStr){
+  const d = new Date(dateStr);
+  const day = (d.getDay() + 6) % 7;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - day);
+  monday.setHours(0,0,0,0);
+  return monday.toISOString().slice(0,10);
+}
+
+function weekLabel(mondayStr){
+  const monday = new Date(mondayStr);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = (d) => d.toLocaleDateString('es-ES', {day:'2-digit', month:'short'});
+  return `Semana ${fmt(monday)} – ${fmt(sunday)}`;
+}
+
+function renderHistory(){
+  const host = document.getElementById('histList');
+  host.innerHTML = '';
+  if(!history.length){
+    host.innerHTML = '<div class="empty">Aún no hay sesiones guardadas.</div>';
+    return;
+  }
+
+  const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  let currentWeek = null;
+  sorted.forEach(h => {
+    const wk = weekKey(h.date);
+    if(wk !== currentWeek){
+      currentWeek = wk;
+      const divider = document.createElement('div');
+      divider.className = 'week-divider';
+      divider.innerHTML = `<div class="label">${weekLabel(wk)}</div><div class="line"></div>`;
+      host.appendChild(divider);
+    }
+    const row = document.createElement('div');
+    row.className = 'hist-entry';
+    const date = new Date(h.date);
+    const dateStr = date.toLocaleDateString('es-ES', {weekday:'short', day:'2-digit', month:'short'});
+
+    let html = `<div class="hist-head"><span class="hist-day">${h.day}</span><span class="hist-date">${dateStr}</span>
+      <span class="hist-actions"><span class="hist-action edit" data-action="edit">editar</span><span class="hist-action del" data-action="del">eliminar</span></span></div>`;
+
+    if(h.principals && h.principals.length){
+      html += `<div class="hist-sub">Fijos</div>`;
+      h.principals.forEach(p => {
+        const repsTxt = (p.reps || []).filter(r => r !== '').join(', ') || '–';
+        html += `<div class="hist-ex"><span class="n">${p.name}</span>
+          <span class="v">${repsTxt} reps @ ${p.weight || '–'}kg</span>
+          ${p.comment ? `<span class="c">"${p.comment}"</span>` : ''}</div>`;
+      });
+    }
+
+    if(h.circuit){
+      const c = h.circuit;
+      const cfgParts = [];
+      if(c.rounds) cfgParts.push(`${c.rounds} series`);
+      if(c.workSec) cfgParts.push(`${c.workSec}s trabajo`);
+      if(c.restEx) cfgParts.push(`${c.restEx}s desc. ejerc.`);
+      if(c.restRounds) cfgParts.push(`${c.restRounds}s desc. series`);
+      html += `<div class="hist-sub">Circuito</div>`;
+      if(cfgParts.length) html += `<div class="hist-circuit-cfg">${cfgParts.join(' · ')}</div>`;
+      (c.exercises || []).forEach(e => {
+        html += `<div class="hist-ex"><span class="n">${e.name}</span>
+          <span class="v">${e.weight ? e.weight + 'kg' : 'sin peso'}</span>
+          ${e.comment ? `<span class="c">"${e.comment}"</span>` : ''}</div>`;
+      });
+    }
+
+    row.innerHTML = html;
+    row.querySelector('[data-action="edit"]').onclick = () => loadEntryForEditing(h);
+    row.querySelector('[data-action="del"]').onclick = () => {
+      if(confirmingDelete === h){
+        deleteEntry(h);
+        confirmingDelete = null;
+      } else {
+        confirmingDelete = h;
+        renderHistory();
+      }
+    };
+    if(confirmingDelete === h){
+      const confirmDiv = document.createElement('div');
+      confirmDiv.style.cssText = 'margin-top:4px;font-size:10px;color:var(--rust);font-family:IBM Plex Mono,monospace;';
+      confirmDiv.textContent = '⚠ Pulsa "eliminar" para confirmar';
+      row.appendChild(confirmDiv);
+    }
+    host.appendChild(row);
+  });
+}
+
+document.getElementById('resetBtn').onclick = () => {
+  const host = document.getElementById('resetConfirm');
+  host.innerHTML = `
+    <div class="reset-confirm-box">
+      <p>¿Borrar todo el historial?</p>
+      <div class="btns">
+        <button class="btn-confirm-yes" id="confirmYes">Sí, borrar</button>
+        <button class="btn-confirm-no" id="confirmNo">Cancelar</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('confirmYes').onclick = async () => {
+    history = [];
+    await saveHistory();
+    host.innerHTML = '';
+    renderHistory();
+    resetDayState();
+    renderPanel();
+  };
+  document.getElementById('confirmNo').onclick = () => { host.innerHTML = ''; };
+};
+
+document.getElementById('exportBtn').onclick = exportBackup;
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = (e) => {
+  if(e.target.files && e.target.files[0]) importBackup(e.target.files[0]);
+  e.target.value = '';
+};
+document.getElementById('settingsToggle').onclick = () => {
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsToggle').textContent = settingsOpen ? '⚙ Cerrar edición' : '⚙ Editar ejercicios';
+  renderSettingsPanel();
+};
+
+async function initApp(){
+  loadConfig();
+  await loadHistory();
+  resetDayState();
+  renderTabs();
+  renderPanel();
+}
+
+initApp();
+
+</script>
+</body>
+</html>
